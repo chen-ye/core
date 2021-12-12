@@ -13,6 +13,7 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    CONTENT_TYPE_TEXT_PLAIN,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
@@ -395,7 +396,10 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(variables=data.get("variables"), parse_result=False)
+            return web.Response(
+                body=tpl.async_render(variables=data.get("variables"), parse_result=False)
+                content_type=CONTENT_TYPE_TEXT_PLAIN
+            )
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTPStatus.BAD_REQUEST
